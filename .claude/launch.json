@@ -1,0 +1,35 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "ballclub",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev"
+      ],
+      "port": 4173
+    },
+    {
+      "name": "ballclub-4174",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "PORT=4174",
+        "node",
+        "server.mjs"
+      ],
+      "port": 4174
+    },
+    {
+      "name": "ballclub-nollm",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "PORT=4175",
+        "OLLAMA_HOST=http://127.0.0.1:9",
+        "node",
+        "server.mjs"
+      ],
+      "port": 4175
+    }
+  ]
+}

@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#1b2124">
+<meta name="description" content="ローカルLLMの判断と、選手の練習・生活・睡眠・成長、アナリストの分析が連動する24時間の球団の箱庭。">
+<title>球団の箱庭 | こもれびベアーズ</title>
+<link rel="stylesheet" href="/ballclub/style.css">
+</head>
+<body>
+<header class="bar">
+  <div class="brand">
+    <span class="mark" aria-hidden="true"></span>
+    <div><h1>球団の箱庭</h1><p>こもれびベアーズの一日</p></div>
+    <span class="badge" id="llm-badge" title="判断の出どころ">確認中…</span>
+  </div>
+  <div class="clock" aria-live="off"><span id="day">1日目</span><span id="date"></span><b id="clock">06:00</b><span id="period">早朝</span></div>
+  <div class="controls" role="toolbar" aria-label="再生と表示">
+    <button id="play" class="icon-btn" aria-label="一時停止" title="一時停止／再生（Space）"></button>
+    <div class="seg" role="group" aria-label="再生速度（1×＝現実の1秒がゲーム内の10秒）"><button data-speed="1" aria-pressed="true" title="標準：現実の1秒＝ゲーム内の10秒（人物の動きは自然な速さ）">1×</button><button data-speed="2" aria-pressed="false">2×</button><button data-speed="4" aria-pressed="false">4×</button></div>
+    <button id="ff" class="toggle" aria-pressed="false" title="19:00〜06:30 に使えます。途中の睡眠・回復・作業も計算しながら朝まで進めます。判断が必要になったら止まります">朝まで早送り</button>
+    <button id="open-matches" class="toggle room-btn">試合</button>
+    <button id="open-room" class="toggle room-btn" title="集計・グラフ・小野アナリストのレポート">分析室</button>
+    <div class="seg" role="group" aria-label="拡大縮小"><button id="zoom-out" aria-label="縮小" title="縮小（−）">−</button><button id="zoom-fit" aria-label="全体を表示" title="全体を表示（0）">全体</button><button id="zoom-in" aria-label="拡大" title="拡大（＋）">＋</button></div>
+    <div class="seg" role="group" aria-label="判断の方法" id="mode-seg"><button data-mode="llm" aria-pressed="true" title="ローカルLLMで判断する（つながらないときはルールで代替し、その旨を表示）">LLM</button><button data-mode="rules" aria-pressed="false" title="すべてルールで判断する">ルール</button></div>
+    <button id="names" class="toggle" aria-pressed="false" title="全員の名札を表示（N）">名札</button>
+    <button id="restart" class="ghost" title="このブラウザの保存を消して1日目の06:00から始める">最初から</button>
+  </div>
+  <p id="ff-note" class="ff-note" role="status"></p>
+</header>
+<main class="layout">
+  <section class="stage" aria-label="球団施設の箱庭">
+    <canvas id="world" role="img" aria-label="球団施設を上から見たドット絵。人物をクリックすると、右の欄に名前・行動・判断理由が出ます。"></canvas>
+    <div class="paused" id="paused" hidden>一時停止中</div>
+    <p class="hint">人物をクリックで選択／ホイール・ボタンで拡大／拡大中はドラッグで移動</p>
+  </section>
+  <div id="match-room" class="room" hidden></div>
+  <div id="analysis-room" class="room" hidden></div>
+  <aside class="panel">
+    <section class="card drive-card" aria-label="Google Driveへの保存">
+      <p id="db-state" class="minor-line" role="status">ローカル保存庫を確認中…</p>
+      <h3 class="cast-head">Google Drive<span id="drive-state">確認中…</span></h3>
+      <div class="drive-actions">
+        <button id="drive-connect" class="toggle">Googleに接続</button>
+        <button id="drive-status" class="toggle">接続を確認</button>
+        <button id="drive-save" class="toggle" disabled>Driveへ保存</button>
+        <button id="drive-list" class="toggle" disabled>保存一覧</button>
+        <button id="drive-undo" class="toggle">読み込み前に戻す</button>
+      </div>
+      <p id="drive-message" class="minor-line" role="status"></p>
+      <ol id="drive-files" class="drive-files"></ol>
+      <button id="drive-more" class="toggle" hidden>続きを表示</button>
+      <div class="drive-records">
+        <h4>練習・睡眠・試合の記録と分析レポート</h4>
+        <label class="check"><input type="checkbox" id="drive-auto"> 日ごとの記録とレポートを自動でDriveへ送る</label>
+        <button id="drive-records" class="toggle" disabled>記録を送る</button>
+        <p id="drive-records-state" class="minor-line" role="status"></p>
+      </div>
+    </section>
+    <section class="card who" aria-live="polite">
+      <div class="who-head">
+        <canvas id="mug" width="24" height="22" aria-hidden="true"></canvas>
+        <div class="who-name"><h2 id="p-name">—</h2><p id="p-role"></p></div>
+        <span class="chip" id="p-status">—</span>
+      </div>
+      <dl class="facts">
+        <dt>いま</dt><dd id="p-doing">—</dd>
+        <dt>場所</dt><dd id="p-place">—</dd>
+        <dt>今日の方針</dt><dd id="p-focus">—</dd>
+        <dt>判断</dt><dd id="p-decision">—</dd>
+        <dt>残りの予定</dt><dd id="p-next">—</dd>
+        <dt>判断理由</dt><dd id="p-reason">—</dd>
+      </dl>
+      <button id="p-room" class="toggle room-btn" hidden>分析室を開く（レポート・集計）</button>
+      <h4>保留中の報告・相談</h4>
+      <ol class="mini-log" id="p-inbox"></ol>
+      <h4>直近の予定変更と判断</h4>
+      <ol class="mini-log" id="p-changes"></ol>
+      <div id="p-player" hidden>
+        <div class="meters">
+          <div class="meter"><span>疲労</span><i><b id="p-fat-bar"></b></i><em id="p-fat">—</em></div>
+          <div class="meter"><span>調子</span><i class="mid"><b id="p-cond-bar"></b></i><em id="p-cond">—</em></div>
+        </div>
+        <p class="minor-line" id="p-sleep">—</p>
+        <table class="abil" aria-label="能力と練習経験"><thead><tr><th>能力</th><th>値</th><th>今日の経験</th><th>未定着</th></tr></thead><tbody id="p-ability"></tbody></table>
+        <p class="minor-line" id="p-today">—</p>
+        <h4>直近の練習成果</h4>
+        <p class="last" id="p-last">—</p>
+      </div>
+      <h4>この人物の履歴</h4>
+      <ol class="mini-log" id="p-history"></ol>
+      <div class="who-actions">
+        <button id="follow" class="toggle" aria-pressed="false" title="この人物をカメラで追う（F）">追いかける</button>
+        <span class="src" id="p-src">—</span>
+      </div>
+    </section>
+    <section class="card">
+      <h3>判断キュー<span class="sub" id="q-sum"></span></h3>
+      <div id="queue" class="queue"></div>
+    </section>
+    <section class="card">
+      <h3>きょうの流れ</h3>
+      <ol class="story" id="story"></ol>
+    </section>
+    <section class="card log-card">
+      <h3 class="cast-head">出来事<button id="log-all" class="mini-toggle" aria-pressed="false" title="練習ごとの記録・夜の計算など細かい記録も表示">細かい記録も</button></h3>
+      <ol class="log" id="log" aria-live="polite"></ol>
+    </section>
+    <section class="card">
+      <h3 class="cast-head">人物<span class="legend" aria-label="状態の色"><i style="--c:var(--talk)"></i>会話<i style="--c:var(--think)"></i>考え中<i style="--c:var(--work)"></i>作業<i style="--c:var(--rest)"></i>休憩<i style="--c:var(--move)"></i>移動</span></h3>
+      <div class="cast" id="cast" role="group" aria-label="人物を選ぶ"></div>
+    </section>
+    <p class="note">人物・球団・出来事はすべて架空です。成長・疲労・睡眠はゲーム内の仮定にもとづく計算で、現実の人体を再現するものではありません。時間は現実の1秒＝ゲーム内の10秒（1×）。<span id="save-note"></span></p>
+  </aside>
+</main>
+<script type="module" src="/ballclub/app.js"></script>
+</body>
+</html>

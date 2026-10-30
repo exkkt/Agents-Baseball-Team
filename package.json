@@ -1,0 +1,11 @@
+{
+  "name": "komorebi-baseball-gm",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node server.mjs",
+    "test": "node --test test/*.test.mjs",
+    "check": "node --check dist/app.js && node --check dist/lib/engine.js && node --check dist/lib/semantic.js && node --check dist/lib/advisor.js && node --check server/baseball.mjs && node --check dist/ballclub/pitch-model.js && node --check dist/ballclub/pitch-validation.js && node --check dist/ballclub/data-store.js && node --check dist/ballclub/pitch-ui.js && node --check dist/ballclub/baseball.js && node --check dist/ballclub/matches.js && node --check dist/ballclub/match-ui.js && node --check dist/ballclub/app.js && node --check dist/ballclub/sim.js && node --check dist/ballclub/director.js && node --check dist/ballclub/world.js && node --check dist/ballclub/cast.js && node --check dist/ballclub/render.js && node --check dist/ballclub/sprites.js && node --check dist/ballclub/furniture.js && node --check dist/ballclub/pixel.js && node --check dist/ballclub/growth.js && node --check dist/ballclub/agents.js && node --check dist/ballclub/brain.js && node --check dist/ballclub/llm.js && node --check dist/ballclub/stepper.js && node --check server.mjs && node --check server/drive.mjs && node --check dist/ballclub/drive-ui.js && node --check dist/ballclub/save-format.js && node --check dist/ballclub/records.js && node --check dist/ballclub/metrics.js && node --check dist/ballclub/analyst.js && node --check dist/ballclub/analysis-ui.js && node --check dist/ballclub/drive-archive.js"
+  }
+}

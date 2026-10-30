@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="ja">
+<head><meta charset="UTF-8"><title>箱庭スプライト一覧（開発用）</title>
+<style>body{margin:0;background:#3a4252;color:#eee;font:12px system-ui}canvas{image-rendering:pixelated;display:block}</style></head>
+<body><canvas id="c"></canvas>
+<script type="module">
+import { figure, AX, AY, SW, SH } from './sprites.js';
+import { CAST } from './cast.js';
+const Z = Number(new URLSearchParams(location.search).get('z') || 4);
+const who = (new URLSearchParams(location.search).get('who') || 'gm,aoki,endo,kawaguchi,manager,hcoach,analyst,trainer,cook,yamada').split(',');
+const looks = who.map(id => CAST.find(p => p.id === id).look);
+const rows = [
+  ...['down', 'up', 'right'].map(d => ({ label: 'stand ' + d, s: { kind: 'stand', dir: d } })),
+  ...[0, 1, 2, 3].map(f => ({ label: 'walk down ' + f, s: { kind: 'walk', dir: 'down', f } })),
+  ...[0, 1, 2, 3].map(f => ({ label: 'walk right ' + f, s: { kind: 'walk', dir: 'right', f } })),
+  ...[0, 1].map(f => ({ label: 'walk up ' + f, s: { kind: 'walk', dir: 'up', f } })),
+  ...[0, 1, 2, 3].map(f => ({ label: 'run ' + f, s: { kind: 'run', dir: 'right', f } })),
+  ...['stance', 'load', 'swing', 'follow'].map(ph => ({ label: 'bat ' + ph, s: { kind: 'bat', dir: 'right', ph, wear: 'helmet' } })),
+  ...['set', 'lift', 'stride', 'release', 'follow'].map(ph => ({ label: 'pitch ' + ph, s: { kind: 'pitch', dir: 'right', ph, wear: 'cap' } })),
+  ...['ready', 'catch', 'throw'].map(ph => ({ label: 'catcher ' + ph, s: { kind: 'catcher', dir: 'left', ph } })),
+  ...['ready', 'wind', 'throw', 'follow', 'catch'].map(ph => ({ label: 'throw ' + ph, s: { kind: 'throw', dir: 'right', ph, wear: 'cap' } })),
+  ...['ready', 'toss', 'swing', 'follow'].map(ph => ({ label: 'knock ' + ph, s: { kind: 'knock', dir: 'right', ph, wear: 'cap' } })),
+  ...['ready', 'scoop'].map(ph => ({ label: 'field ' + ph, s: { kind: 'field', dir: 'left', ph, wear: 'cap' } })),
+  ...['type', 'read', 'meet', 'eat', 'observe', 'drink', 'think'].map(a => ({ label: 'sit ' + a, s: { kind: 'sit', dir: 'down', act: a, f: 1, mouth: a === 'meet', desk: ['type', 'read', 'meet', 'eat'].includes(a) } })),
+  ...['type', 'meet'].map(a => ({ label: 'sit up ' + a, s: { kind: 'sit', dir: 'up', act: a, f: 1 } })),
+  ...[{ kind: 'clip', dir: 'right', ph: 'write' }, { kind: 'clip', dir: 'down', ph: 'write' }, { kind: 'talk', dir: 'down', mouth: true, f: 1 }, { kind: 'think', dir: 'down' }, { kind: 'point', dir: 'up' }, { kind: 'joy', dir: 'down' }, { kind: 'treat', dir: 'right' }, { kind: 'cook', dir: 'down' }, { kind: 'breathe', dir: 'right' }, { kind: 'stretch', dir: 'down' }, { kind: 'lie', dir: 'down' }].map(s => ({ label: s.kind + ' ' + s.dir, s }))
+];
+const cw = 30, ch = 40, per = Math.max(1, Math.floor(innerWidth / (cw * Z))), lines = Math.ceil(rows.length / per), bh = looks.length * ch + 8;
+const c = document.getElementById('c'); c.width = per * cw * Z; c.height = lines * bh * Z;
+const ctx = c.getContext('2d'); ctx.imageSmoothingEnabled = false; ctx.scale(Z, Z);
+ctx.fillStyle = '#7aa85e'; ctx.fillRect(0, 0, c.width, c.height);
+rows.forEach((r, i) => {
+  const ox = (i % per) * cw, oy = Math.floor(i / per) * bh;
+  ctx.fillStyle = i % 2 ? '#74a259' : '#7aa85e'; ctx.fillRect(ox, oy, cw, bh);
+  ctx.save(); ctx.fillStyle = '#123'; ctx.font = '3px system-ui'; ctx.fillText(r.label, ox + 1, oy + 4); ctx.restore();
+  looks.forEach((look, j) => {
+    const s = figure(look, { ...r.s, wear: r.s.wear ?? (look.cap ? 'cap' : look.headwear) });
+    const x = ox + 15, y = oy + j * ch + 36;
+    ctx.fillStyle = 'rgba(40,30,60,.25)'; ctx.fillRect(x - 5, y - 1, 10, 2);
+    ctx.drawImage(s.body, x - AX, y - AY);
+    if (s.over) ctx.drawImage(s.over, x - AX, y - AY);
+  });
+});
+</script></body></html>
